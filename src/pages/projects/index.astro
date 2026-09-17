@@ -1,0 +1,110 @@
+---
+/**
+ * Projects Index Page
+ * 
+ * Lists all projects as case studies with impact summaries. Projects are displayed
+ * in a prioritized order: custom order (if specified) takes precedence, otherwise
+ * sorted by year (most recent first). Featured projects are highlighted.
+ * 
+ * Features:
+ * - Queries all projects from content collection
+ * - Smart sorting: custom order → year (descending)
+ * - Displays project and featured count statistics
+ * - Uses ProjectCard component for consistent presentation
+ * - SEO optimization
+ * - Empty state handling
+ * 
+ * Route: /projects
+ * 
+ * @page
+ */
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SEO from '../../components/SEO.astro';
+import ProjectCard from '../../components/ProjectCard.astro';
+import PageStats from '../../components/PageStats.astro';
+import { getCollection } from 'astro:content';
+import { getLocale, getLocaleFromPath, getPageTranslations } from '../../i18n/utils';
+
+/**
+ * Queries all projects from the content collection
+ */
+const allProjects = await getCollection('projects');
+
+/**
+ * Sorts projects with intelligent prioritization
+ * 
+ * Sorting logic:
+ * 1. If both projects have an 'order' field, sort by order (ascending)
+ * 2. Projects with 'order' field are prioritized over those without
+ * 3. Projects without 'order' are sorted by year (descending - newest first)
+ * 
+ * This allows manual curation of featured projects while maintaining
+ * chronological order for others.
+ */
+const sortedProjects = allProjects.sort((a, b) => {
+  // If both have order field, sort by order
+  if (a.data.order !== undefined && b.data.order !== undefined) {
+    return a.data.order - b.data.order;
+  }
+  // If only one has order, prioritize it
+  if (a.data.order !== undefined) return -1;
+  if (b.data.order !== undefined) return 1;
+  // Otherwise sort by year (descending)
+  return (b.data.year || 0) - (a.data.year || 0);
+});
+
+/**
+ * Total count of projects for statistics display
+ */
+const totalProjects = sortedProjects.length;
+
+/**
+ * Count of featured projects for statistics display
+ */
+const locale = getLocale(Astro.locals.locale || Astro.url.searchParams.get('_locale') || getLocaleFromPath(Astro.url.pathname));
+const page = getPageTranslations(locale).projects;
+const projectLabels = locale === 'ar'
+  ? { role: 'مطور Backend', view: 'عرض المشروع' }
+  : { role: 'Backend Developer', view: 'View project' };
+---
+
+<BaseLayout>
+  <SEO 
+    slot="head"
+    title={page.title}
+    description={page.description}
+    type="website"
+  />
+
+  <main class="page-container">
+    <header class="page-header">
+      <h1 class="page-title">{page.heading}</h1>
+      <p class="page-intro">
+        {page.intro}
+      </p>
+      <PageStats text={locale === 'ar' ? `${totalProjects} مشاريع` : `${totalProjects} projects`} />
+    </header>
+
+    {sortedProjects.length > 0 ? (
+      <div class="card-list">
+        {sortedProjects.map((project) => (
+          <ProjectCard
+            title={locale === 'ar' ? project.data.titleAr || project.data.title : project.data.title}
+            slug={project.id}
+            outcomeSummary={locale === 'ar' ? project.data.outcomeSummaryAr || project.data.outcomeSummary : project.data.outcomeSummary}
+            role={locale === 'ar'
+  ? project.data.roleAr || project.data.role || projectLabels.role
+  : project.data.role || projectLabels.role}
+            year={project.data.year}
+            techStack={project.data.techStack}
+            featured={project.data.featured}
+            status={project.data.status}
+          />
+        ))}
+      </div>
+    ) : (
+      <p class="empty-state">No projects available yet.</p>
+    )}
+  </main>
+</BaseLayout>

@@ -1,0 +1,31 @@
+{
+  "name": "abdallah-hijazi-portfolio",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "Personal portfolio of Abdallah Ahmad Hijazi, Backend Developer focused on ASP.NET Core APIs and Application Security.",
+  "keywords": [
+    "astro",
+    "portfolio",
+    "backend",
+    "aspnet-core",
+    "application-security"
+  ],
+  "author": "Abdallah Ahmad Hijazi <AbdallahHijazi2023@gmail.com>",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro check && astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/mdx": "^8.0.1",
+    "@astrojs/sitemap": "^3.6.1",
+    "astro": "^7.3.2",
+    "sharp": "^0.35.4"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.0",
+    "typescript": "^5.6.0"
+  }
+}

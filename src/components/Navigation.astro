@@ -1,0 +1,84 @@
+---
+import ThemeToggle from './ThemeToggle.astro';
+import LanguageSwitcher from './LanguageSwitcher.astro';
+import { getLocale, getLocaleFromPath, getTranslations, localizePath } from '../i18n/utils';
+
+const currentPath = Astro.url.pathname;
+const locale = getLocale(Astro.locals.locale || Astro.url.searchParams.get('_locale') || getLocaleFromPath(Astro.url.pathname));
+const t = getTranslations(locale);
+const homePath = localizePath('/', locale);
+const navItems = [
+  { label: t.nav.home, href: homePath },
+  { label: locale === 'ar' ? 'المشاريع' : 'Projects', href: `${homePath}#projects` },
+  { label: locale === 'ar' ? 'أمن التطبيقات' : 'Security', href: `${homePath}#security` },
+  { label: t.nav.uses, href: `${homePath}#stack` },
+  { label: t.nav.journey, href: `${homePath}#experience` },
+  { label: t.nav.contact, href: `${homePath}#contact` },
+];
+
+const isActive = (href: string) => {
+  const basePath = href.split('#')[0];
+  return basePath === homePath ? currentPath === basePath : currentPath.startsWith(basePath);
+};
+---
+
+<nav class="site-nav" aria-label={locale === 'ar' ? 'التنقل الرئيسي' : 'Main navigation'}>
+  <div class="nav-scroll">
+    <ul class="nav-list">
+      {navItems.map((item) => (
+        <li class="nav-item">
+          <a href={item.href} class:list={['nav-link', { 'nav-link--active': isActive(item.href) }]} aria-current={isActive(item.href) ? 'page' : undefined}>
+            {item.label}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+  <div class="nav-end">
+    <LanguageSwitcher />
+    <ThemeToggle />
+  </div>
+</nav>
+
+<script>
+  function updateActiveNav() {
+    const currentPath = window.location.pathname;
+    document.querySelectorAll('.nav-link').forEach((link) => {
+      const href = link.getAttribute('href') || '';
+      const basePath = href.split('#')[0];
+      const isHome = basePath === '/' || basePath === '/en/' || basePath === '/ar/';
+      const active = isHome ? currentPath === basePath : currentPath.startsWith(basePath);
+      link.classList.toggle('nav-link--active', active);
+      if (active) link.setAttribute('aria-current', 'page');
+      else link.removeAttribute('aria-current');
+    });
+  }
+
+  document.addEventListener('astro:page-load', updateActiveNav);
+</script>
+
+<style>
+  .site-nav {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--color-border);
+    padding: 0.75rem 0;
+    margin-bottom: 0;
+    backdrop-filter: blur(18px);
+    background: color-mix(in srgb, var(--color-bg) 88%, transparent);
+  }
+
+  .nav-scroll { flex: 1; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+  .nav-scroll::-webkit-scrollbar { display: none; }
+  .nav-list { display: flex; flex-wrap: nowrap; justify-content: center; gap: 1.25rem; list-style: none; margin: 0; padding: 0.5rem 1.5rem; min-width: max-content; }
+  .nav-item { margin: 0; flex-shrink: 0; }
+  .nav-link { color: var(--color-text-secondary); font: 500 0.6875rem 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.08em; text-decoration: none; white-space: nowrap; transition: color 0.2s ease; }
+  .nav-link:hover, .nav-link--active { color: var(--color-text); }
+  .nav-end { flex-shrink: 0; display: flex; align-items: center; gap: 0.5rem; padding: 0 1rem; border-inline-start: 1px solid var(--color-border); background: var(--color-bg); }
+
+  @media (max-width: 768px) {
+    .nav-list { justify-content: flex-start; gap: 1rem; padding: 0.5rem 1rem; }
+    .nav-link { font-size: 0.625rem; }
+    .nav-end { padding: 0 0.625rem; }
+  }
+</style>

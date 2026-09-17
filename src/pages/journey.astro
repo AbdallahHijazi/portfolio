@@ -1,0 +1,141 @@
+---
+/**
+ * Journey Timeline Page
+ * 
+ * Displays a chronological timeline of career growth and learning progression through
+ * expandable timeline entries. Each entry represents a milestone, learning experience,
+ * or career transition, with optional detailed content that can be revealed.
+ * 
+ * Features:
+ * - Queries all journey entries from content collection
+ * - Sorts by date (descending - most recent first)
+ * - Renders expandable content for each entry
+ * - Detects entries with body content vs. frontmatter-only
+ * - Visual timeline with color-coded entry types
+ * - Skills/technologies display per entry
+ * - Empty state handling
+ * 
+ * Entry Types:
+ * - milestone: Major achievements and launches
+ * - learning: Education and skill development
+ * - transition: Job changes and career moves
+ * 
+ * Route: /journey
+ * 
+ * @page
+ */
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SEO from '../components/SEO.astro';
+import TimelineEntry from '../components/TimelineEntry.astro';
+import { getCollection, render } from 'astro:content';
+import { getLocale, getLocaleFromPath, getPageTranslations } from '../i18n/utils';
+
+/**
+ * Queries all journey entries from the content collection
+ */
+const allJourneyEntries = await getCollection('journey');
+
+/**
+ * Sorts journey entries by date in descending order (most recent first)
+ * 
+ * Ensures the timeline displays with the latest experiences at the top,
+ * allowing visitors to see current context before historical progression.
+ */
+const sortedJourneyEntries = allJourneyEntries.sort((a, b) => {
+  return new Date(b.data.date).getTime() - new Date(a.data.date).getTime();
+});
+
+/**
+ * Renders content for each entry and checks for body content
+ * 
+ * Processes each journey entry to:
+ * 1. Render the MDX content component
+ * 2. Detect if the entry has body content beyond frontmatter
+ * 3. Return entry data with Content component and hasContent flag
+ * 
+ * This allows the TimelineEntry component to conditionally show
+ * the expand/collapse functionality only for entries with additional content.
+ */
+const entriesWithContent = await Promise.all(
+  sortedJourneyEntries.map(async (entry) => {
+    const { Content } = await render(entry);
+    // Check if entry has body content (not just frontmatter)
+    const hasContent = Boolean(entry.body && entry.body.trim().length > 0);
+    return { entry, Content, hasContent };
+  })
+);
+const locale = getLocale(Astro.locals.locale || Astro.url.searchParams.get('_locale') || getLocaleFromPath(Astro.url.pathname));
+const page = getPageTranslations(locale).journey;
+---
+
+<BaseLayout>
+  <SEO 
+    slot="head"
+    title={page.title}
+    description={page.description}
+    type="website"
+  />
+
+  <main class="page-container">
+    <header class="page-header">
+      <h1 class="page-title">{page.heading}</h1>
+      <p class="page-intro">
+        {page.intro}
+      </p>
+    </header>
+
+    {entriesWithContent.length > 0 ? (
+      <div class="journey-timeline">
+        {entriesWithContent.map(({ entry, Content, hasContent }) => (
+          <TimelineEntry
+            date={entry.data.date}
+            period={locale === 'ar' ? entry.data.periodAr || entry.data.period : entry.data.period}
+            title={locale === 'ar' ? entry.data.titleAr || entry.data.title : entry.data.title}
+            type={entry.data.type}
+            description={locale === 'ar' ? entry.data.descriptionAr || entry.data.description : entry.data.description}
+            skills={locale === 'ar' ? entry.data.skillsAr || entry.data.skills : entry.data.skills}
+            contributions={locale === 'ar' ? entry.data.contributionsAr : entry.data.contributions}
+            hasContent={hasContent}
+          >
+            {hasContent && <Content />}
+          </TimelineEntry>
+        ))}
+      </div>
+    ) : (
+      <p class="empty-state">No journey entries yet.</p>
+    )}
+
+    <section class="profile-details">
+      <div>
+        <h2>{locale === 'ar' ? 'اللغات' : 'Languages'}</h2>
+        <ul>
+          <li>{locale === 'ar' ? 'العربية: اللغة الأم' : 'Arabic: Native'}</li>
+          <li>{locale === 'ar' ? 'الإنجليزية: متوسط (B1)' : 'English: Intermediate (B1)'}</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <style>
+    .journey-timeline {
+      margin-top: 2rem;
+    }
+
+    .profile-details {
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--color-border);
+    }
+
+    .profile-details h2 {
+      margin-bottom: 1rem;
+    }
+
+    .profile-details ul {
+      display: grid;
+      gap: 0.5rem;
+      list-style: none;
+    }
+  </style>
+</BaseLayout>

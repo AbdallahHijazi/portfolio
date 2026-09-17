@@ -1,0 +1,124 @@
+---
+import { getAlternateLocale, getAlternatePath, getLocale, getLocaleFromPath } from '../i18n/utils';
+
+const locale = getLocale(Astro.locals.locale || Astro.url.searchParams.get('_locale') || getLocaleFromPath(Astro.url.pathname));
+const alternateLocale = getAlternateLocale(locale);
+const alternatePath = getAlternatePath(Astro.url.pathname, locale);
+const label = locale === 'en' ? 'Switch to Arabic' : 'التبديل إلى الإنجليزية';
+const text = locale === 'en' ? 'العربية' : 'English';
+---
+
+<a
+  class="language-switcher"
+  href={alternatePath}
+  lang={alternateLocale}
+  hreflang={alternateLocale}
+  aria-label={label}
+>
+  {text}
+</a>
+<script>
+  const STORAGE_KEY = 'language-switch-position';
+
+  function saveLanguageSwitchPosition() {
+    const sections = Array.from(
+      document.querySelectorAll<HTMLElement>('section[id]')
+    );
+
+    const viewportPoint = window.scrollY + window.innerHeight / 2;
+
+    let currentSection: HTMLElement | null = null;
+
+    for (const section of sections) {
+      const top = section.offsetTop;
+      const bottom = top + section.offsetHeight;
+
+      if (viewportPoint >= top && viewportPoint <= bottom) {
+        currentSection = section;
+        break;
+      }
+    }
+
+    if (!currentSection) return;
+
+    const sectionTop = currentSection.offsetTop;
+    const sectionHeight = currentSection.offsetHeight;
+
+    const progress = Math.max(
+      0,
+      Math.min(1, (viewportPoint - sectionTop) / sectionHeight)
+    );
+
+    sessionStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        id: currentSection.id,
+        progress,
+      })
+    );
+  }
+
+  document.addEventListener('click', (event) => {
+    const target = event.target as HTMLElement;
+    const link = target.closest<HTMLAnchorElement>('.language-switcher');
+
+    if (!link) return;
+
+    saveLanguageSwitchPosition();
+  });
+
+  document.addEventListener('astro:page-load', () => {
+    const saved = sessionStorage.getItem(STORAGE_KEY);
+
+    if (!saved) return;
+
+    sessionStorage.removeItem(STORAGE_KEY);
+
+    try {
+      const { id, progress } = JSON.parse(saved);
+      const section = document.getElementById(id);
+
+      if (!section) return;
+
+      requestAnimationFrame(() => {
+        const previousBehavior =
+          document.documentElement.style.scrollBehavior;
+
+        document.documentElement.style.scrollBehavior = 'auto';
+
+        const target =
+          section.offsetTop +
+          section.offsetHeight * progress -
+          window.innerHeight / 2;
+
+        window.scrollTo({
+          top: Math.max(0, target),
+          behavior: 'auto',
+        });
+
+        document.documentElement.style.scrollBehavior = previousBehavior;
+      });
+    } catch {
+      sessionStorage.removeItem(STORAGE_KEY);
+    }
+  });
+</script>
+<style>
+  .language-switcher {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2rem;
+    padding-inline: 0.625rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-sm);
+    color: var(--color-text-secondary);
+    font-size: 0.8125rem;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .language-switcher:hover {
+    border-color: var(--color-accent);
+    color: var(--color-text);
+  }
+</style>

@@ -1,0 +1,28 @@
+---
+import { getCollection } from 'astro:content';
+import { locales, type Locale } from '../../i18n/config';
+
+export async function getStaticPaths() {
+  const staticRoutes = ['', 'projects', 'journey', 'uses', 'contact'];
+  const projectEntries = await getCollection('projects');
+  const detailRoutes = projectEntries.map((entry) => `projects/${entry.id}`);
+
+  return locales.flatMap((locale) => [...staticRoutes, ...detailRoutes].map((route) => ({
+    params: {
+      locale,
+      slug: route || undefined,
+    },
+  })));
+}
+
+const locale = Astro.params.locale as Locale;
+
+const targetUrl = new URL(
+  Astro.params.slug ? `/${Astro.params.slug}` : '/',
+  Astro.url
+);
+
+targetUrl.searchParams.set('_locale', locale);
+
+return Astro.rewrite(targetUrl);
+---

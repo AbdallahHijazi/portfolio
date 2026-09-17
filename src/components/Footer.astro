@@ -1,0 +1,42 @@
+---
+import { siteConfig } from '../config';
+
+const currentYear = new Date().getFullYear();
+const socialLinks = Object.entries(siteConfig.social)
+  .filter(([_, url]) => url)
+  .map(([platform, url]) => ({
+    platform: platform.charAt(0).toUpperCase() + platform.slice(1),
+    url,
+  }));
+---
+
+<footer class="site-footer">
+  <div class="footer-container">
+    <div>
+      <span class="footer-kicker">SYSTEM // PORTFOLIO</span>
+      <span class="copyright">{siteConfig.author.name} © {currentYear} </span>
+    </div>
+    {socialLinks.length > 0 && (
+      <div class="footer-social">
+        {socialLinks.map((link, index) => (
+          <>
+            <a href={link.url} target="_blank" rel="noopener noreferrer">{link.platform}</a>
+            {index < socialLinks.length - 1 && <span class="separator">·</span>}
+          </>
+        ))}
+      </div>
+    )}
+  </div>
+</footer>
+
+<style>
+  .site-footer { border-top: 1px solid var(--color-border); padding: 2.5rem 1.5rem; margin-top: auto; background: var(--color-bg-secondary); }
+  .footer-container { max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+  .footer-kicker { display: block; color: var(--color-accent); font: 0.625rem 'JetBrains Mono', monospace; letter-spacing: 0.1em; }
+  .copyright { display: block; margin-top: 0.5rem; color: var(--color-text-muted); font: 0.75rem 'JetBrains Mono', monospace; }
+  .footer-social { display: flex; align-items: center; gap: 0.5rem; }
+  .footer-social a { color: var(--color-text-muted); font: 0.75rem 'JetBrains Mono', monospace; text-decoration: none; transition: color 0.2s ease; }
+  .footer-social a:hover { color: var(--color-accent); }
+  .separator { color: var(--color-text-muted); opacity: 0.5; user-select: none; }
+  @media (max-width: 480px) { .footer-container { flex-direction: column; gap: 0.75rem; text-align: center; } }
+</style>
