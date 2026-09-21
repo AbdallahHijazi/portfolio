@@ -71,7 +71,7 @@ export default defineConfig({
    * 
    * Set SITE_URL in your .env file (e.g., https://example.com)
    */
-  site: SITE_URL || 'https://example.com',
+  site: SITE_URL || 'https://abdallah-hijazi.pages.dev',
   
   /**
    * Environment variables schema (Astro v5+)
@@ -87,7 +87,7 @@ export default defineConfig({
   env: {
     schema: {
       // Site configuration
-      SITE_URL: envField.string({ context: 'client', access: 'public', default: 'https://example.com' }),
+      SITE_URL: envField.string({ context: 'client', access: 'public', default: 'https://abdallah-hijazi.pages.dev' }),
       SITE_LANGUAGE: envField.string({ context: 'client', access: 'public', default: 'en' }),
       SITE_TITLE: envField.string({ context: 'client', access: 'public', default: 'Abdallah Ahmad Hijazi | Backend Developer' }),
       SITE_DESCRIPTION: envField.string({ context: 'client', access: 'public', default: 'Junior Backend Developer specializing in ASP.NET Core API development, application security, relational databases, JWT authentication, and RBAC.' }),
